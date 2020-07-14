@@ -75,7 +75,7 @@
     <string>Alarm system</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="pushButton">
+  <widget class="QPushButton" name="pushButton_deactivate">
    <property name="geometry">
     <rect>
      <x>240</x>
@@ -110,7 +110,7 @@
     </font>
    </property>
    <property name="text">
-    <string>Alarm is activate, to deactivate enter password:</string>
+    <string>Alarm has been activated, to deactivate enter password:</string>
    </property>
    <property name="scaledContents">
     <bool>false</bool>
@@ -221,7 +221,7 @@
     </rect>
    </property>
   </widget>
-  <widget class="QPushButton" name="pushButton_2">
+  <widget class="QPushButton" name="pushButton_start">
    <property name="geometry">
     <rect>
      <x>270</x>
@@ -349,7 +349,7 @@
     <string>status: OFF</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="pushButton_3">
+  <widget class="QPushButton" name="pushButton_stop">
    <property name="geometry">
     <rect>
      <x>530</x>

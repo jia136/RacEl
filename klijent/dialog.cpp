@@ -10,13 +10,15 @@ Dialog::Dialog(QWidget *parent) :
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(on_timerUpdate()));
     this->timer->start(1000);
-	qsrand(QTime::currentTime().msec());
+    qsrand(QTime::currentTime().msec());
+
     //light sensor initional value
     fd = wiringPiI2CSetup(YL);
     wiringPiI2CReadReg8(fd, YL);
     init_light = wiringPiI2CReadReg8(fd, YL);
     ui->verticalSlider->setRange(0,255);
     ui->verticalSlider->setEnabled(false);
+
     //LED off initional
     digitalWrite(LED, LOW);
 
@@ -28,8 +30,8 @@ Dialog::Dialog(QWidget *parent) :
     ui->label_5->hide();
     ui->verticalSlider->hide();
     ui->label_6->hide();
-    ui->pushButton->hide();
-    ui->pushButton_3->hide();
+    ui->pushButton_deactivate->hide();
+    ui->pushButton_stop->hide();
     ui->label->hide();
     ui->label_2->hide();
     ui->bell_on->hide();
@@ -46,7 +48,7 @@ Dialog::Dialog(QWidget *parent) :
 
 
     ui->lineEdit->setEnabled(false);
-    ui->pushButton->setEnabled(false);
+    ui->pushButton_deactivate->setEnabled(false);
 }
 
 void Dialog::light_sensor(){
@@ -54,53 +56,56 @@ void Dialog::light_sensor(){
 
     ui->verticalSlider->setValue(255-light);
 
-    if(((init_light + 30 < light) || (init_light - 30 > light)) && alarm_activate_light == 0 && (!button_push)){
+    if(((init_light + 30 < light) || (init_light - 30 > light)) && alarm_activate_light == 0 && (!button_deactivate)){
 
        alarm_activate_light = 1;//light sensor is activated
 
        if(!alarm_activate_motion){
-            time_exp=false;
             pass = GetRandomString();//generate random string
 
             time.setHMS(0,0,0,0);
             Connect();
+
+            ui->alarm_info_on->show();
+            ui->alarm_info_off->hide();
+            ui->bell_on->show();
+            ui->bell_off->hide();
             //qDebug()<<pass;
        }
 
-       ui->alarm_info_on->show();
-       ui->alarm_info_off->hide();
+       ui->label_7->hide();//photo_no_light
+       ui->label_8->show();//photo_yes_light
 
-       ui->label_7->hide();
-       ui->label_8->show();
        ui->status_light_on->show();
        ui->status_light_off->hide();
-       ui->bell_on->show();
-       ui->bell_off->hide();
+
     }
 }
+
 void Dialog::motion_sensor(){
 
-    if((digitalRead(MOTION)) && alarm_activate_motion == 0 && (!button_push)){
+    if((digitalRead(MOTION)) && alarm_activate_motion == 0 && (!button_deactivate)){
         //qDebug()<<"pokret";
         alarm_activate_motion = 1;
         if(!alarm_activate_light){
-            time_exp=false;
             pass = GetRandomString();
 
             time.setHMS(0,0,0,0);
             Connect();
             //qDebug()<<pass;
+            ui->bell_on->show();
+            ui->bell_off->hide();
+            ui->alarm_info_on->show();
+            ui->alarm_info_off->hide();
         }
-        ui->alarm_info_on->show();
-        ui->alarm_info_off->hide();
-        ui->label_9->hide();
-        ui->label_10->show();
+
+        ui->label_9->hide();//photo_no_mot
+        ui->label_10->show();//photo_yes_mot
 
         ui->status_mot_on->show();
         ui->status_mov_off->hide();
 
-        ui->bell_on->show();
-        ui->bell_off->hide();
+
     }
     /*else{
         qDebug()<<"nema pokreta";
@@ -169,7 +174,7 @@ void Dialog::on_timerUpdate() {
         if(alarm_activate_light == 1 || alarm_activate_motion == 1){
 
             ui->lineEdit->setEnabled(true);
-            ui->pushButton->setEnabled(true);
+            ui->pushButton_deactivate->setEnabled(true);
 
             ui->alarm_info_on->show();
             ui->alarm_info_off->hide();
@@ -179,8 +184,8 @@ void Dialog::on_timerUpdate() {
 
             ui->lcdNumber->display(30-current_time);
 
-            if(current_time>=30 || time_exp){
-                time_exp=false;
+            if(current_time>=30 || wrong_pass){
+                wrong_pass=false;
                 pass = GetRandomString();
                 time.setHMS(0,0,0,0);
                 Connect();
@@ -190,19 +195,17 @@ void Dialog::on_timerUpdate() {
     }
 }
 
-void Dialog::on_pushButton_clicked()
+void Dialog::on_pushButton_deactivate_clicked()
 {
     QString enter_pass = ui->lineEdit->text();
-    time_exp = false;
 
     if(enter_pass == pass){
-        time_exp=false;
-        button_push=true;
+        wrong_pass=false;
+        button_deactivate=true;
         alarm_activate_light = 0;
         alarm_activate_motion = 0;
         time.setHMS(0,0,0,0);
         Connect();
-        on_timerUpdate();
 
         QMessageBox::information(this,"Alarm system","Alarm system is deactivated.");
         ui->lineEdit->clear();
@@ -222,34 +225,34 @@ void Dialog::on_pushButton_clicked()
         ui->alarm_info_on->hide();
         ui->alarm_info_off->show();
         digitalWrite(LED, LOW);
-        button_push=false;
+        button_deactivate=false;
 
         ui->lineEdit->setEnabled(false);
-        ui->pushButton->setEnabled(false);
+        ui->pushButton_deactivate->setEnabled(false);
     }
     else{
         ui->lineEdit->clear();
         on_timerUpdate();
         time.setHMS(0,0,0,0);
-        time_exp=true;
+        wrong_pass=true;
         QMessageBox::warning(this,"Alarm system","Wrong password! Alarm system is not deactivated. ");
     }
 }
 
 
-void Dialog::on_pushButton_2_clicked()
+void Dialog::on_pushButton_start_clicked()
 {
     status = true;
 
     ui->lcdNumber->show();
-    ui->label_4->show();
-    ui->label_5->show();
+    ui->label_4->show();//text(Remaining time:)
+    ui->label_5->show();//text(Alarm status:)
     ui->verticalSlider->show();
-    ui->label_6->show();
-    ui->pushButton->show();
-    ui->pushButton_3->show();
-    ui->label->show();
-    ui->label_2->show();
+    ui->label_6->show();//text(Motion sensor)
+    ui->pushButton_deactivate->show();
+    ui->pushButton_stop->show();
+    ui->label->show();//text(Light sensor)
+    ui->label_2->show();//text(Alarm system)
     ui->bell_on->hide();
     ui->bell_off->show();
     ui->lineEdit->show();
@@ -264,13 +267,13 @@ void Dialog::on_pushButton_2_clicked()
     ui->alarm_info_on->hide();
     ui->alarm_info_off->show();
 
-    ui->pushButton_2->hide();
+    ui->pushButton_start->hide();
 
     ui->lineEdit->setEnabled(false);
-    ui->pushButton->setEnabled(false);
+    ui->pushButton_deactivate->setEnabled(false);
 }
 
-void Dialog::on_pushButton_3_clicked()
+void Dialog::on_pushButton_stop_clicked()
 {
     if(alarm_activate_light==0 && alarm_activate_motion==0){
         status = false;
@@ -282,9 +285,9 @@ void Dialog::on_pushButton_3_clicked()
         ui->label_5->hide();
         ui->verticalSlider->hide();
         ui->label_6->hide();
-        ui->pushButton->hide();
-        ui->pushButton_2->show();
-        ui->pushButton_3->hide();
+        ui->pushButton_deactivate->hide();
+        ui->pushButton_start->show();
+        ui->pushButton_stop->hide();
         ui->label->hide();
         ui->label_2->hide();
         ui->bell_on->hide();

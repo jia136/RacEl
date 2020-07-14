@@ -30,10 +30,10 @@ public:
     int init_light;
     int fd;
     bool status=false;
-    bool time_exp=false;
+    bool wrong_pass=false;
     bool led_state=false;
 
-    bool button_push=false;
+    bool button_deactivate=false;
 
     bool alarm_activate_light=0;
     bool alarm_activate_motion=0;
@@ -51,9 +51,9 @@ private slots:
     void light_sensor();
     void motion_sensor();
     void alarm_LED();
-    void on_pushButton_clicked();//deactivate
-    void on_pushButton_2_clicked();//start system
-    void on_pushButton_3_clicked();//stop system
+    void on_pushButton_deactivate_clicked();//deactivate
+    void on_pushButton_start_clicked();//start system
+    void on_pushButton_stop_clicked();//stop system
 
 private:
     Ui::Dialog *ui;
